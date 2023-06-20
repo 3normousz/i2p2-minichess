@@ -9,9 +9,11 @@ using namespace std;
 
 int alphabeta(State *state, int depth, int alpha, int beta, bool maximizingPlayer)
 {
-    if (depth == 0)
+    if (depth == 0 || state->game_state != 0)
     {
-        return state->evaluate();
+        int evaluation = state->evaluate();
+        delete state;
+        return evaluation;
     }
     int value;
     if (maximizingPlayer)
@@ -61,4 +63,4 @@ Move Alphabeta::get_move(State *state, int depth)
         }
     }
     return best_move;
-};
+}
