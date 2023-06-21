@@ -9,7 +9,7 @@ using namespace std;
 
 int minimax(State *state, int depth, bool maximizingPlayer)
 {
-    if (depth == 0 || state->game_state != GameState::UNKNOWN)
+    if (depth == 0 || (state->game_state != GameState::UNKNOWN || state->game_state != GameState::NONE))
     {
         return state->evaluate();
     }

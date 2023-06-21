@@ -131,36 +131,33 @@ static const int move_table_king[8][2] = {
  */
 void State::get_legal_actions()
 {
+  // [Optional]
+  // This method is not very efficient
+  // You can redesign it
   this->game_state = NONE;
   std::vector<Move> all_actions;
-  auto &self_board = this->board.board[this->player];
-  auto &oppn_board = this->board.board[1 - this->player];
+  auto self_board = this->board.board[this->player];
+  auto oppn_board = this->board.board[1 - this->player];
 
   int now_piece, oppn_piece;
-  const int max_moves = 8; // Maximum number of moves in move_table_rook_bishop
-
-  for (int i = 0; i < BOARD_H; i++)
+  for (int i = 0; i < BOARD_H; i += 1)
   {
-    for (int j = 0; j < BOARD_W; j++)
+    for (int j = 0; j < BOARD_W; j += 1)
     {
-      now_piece = self_board[i][j];
-      if (now_piece)
+      if ((now_piece = self_board[i][j]))
       {
+        // std::cout << this->player << "," << now_piece << ' ';
         switch (now_piece)
         {
         case 1: // pawn
-        {
-          int direction = (this->player) ? 1 : -1;
-          int next_row = i + direction;
-
-          if (next_row >= 0 && next_row < BOARD_H)
+          if (this->player && i < BOARD_H - 1)
           {
-            if (!oppn_board[next_row][j] && !self_board[next_row][j])
-              all_actions.push_back(Move(Point(i, j), Point(next_row, j)));
-
-            if (j < BOARD_W - 1 && (oppn_piece = oppn_board[next_row][j + 1]) > 0)
+            // black
+            if (!oppn_board[i + 1][j] && !self_board[i + 1][j])
+              all_actions.push_back(Move(Point(i, j), Point(i + 1, j)));
+            if (j < BOARD_W - 1 && (oppn_piece = oppn_board[i + 1][j + 1]) > 0)
             {
-              all_actions.push_back(Move(Point(i, j), Point(next_row, j + 1)));
+              all_actions.push_back(Move(Point(i, j), Point(i + 1, j + 1)));
               if (oppn_piece == 6)
               {
                 this->game_state = WIN;
@@ -168,10 +165,35 @@ void State::get_legal_actions()
                 return;
               }
             }
-
-            if (j > 0 && (oppn_piece = oppn_board[next_row][j - 1]) > 0)
+            if (j > 0 && (oppn_piece = oppn_board[i + 1][j - 1]) > 0)
             {
-              all_actions.push_back(Move(Point(i, j), Point(next_row, j - 1)));
+              all_actions.push_back(Move(Point(i, j), Point(i + 1, j - 1)));
+              if (oppn_piece == 6)
+              {
+                this->game_state = WIN;
+                this->legal_actions = all_actions;
+                return;
+              }
+            }
+          }
+          else if (!this->player && i > 0)
+          {
+            // white
+            if (!oppn_board[i - 1][j] && !self_board[i - 1][j])
+              all_actions.push_back(Move(Point(i, j), Point(i - 1, j)));
+            if (j < BOARD_W - 1 && (oppn_piece = oppn_board[i - 1][j + 1]) > 0)
+            {
+              all_actions.push_back(Move(Point(i, j), Point(i - 1, j + 1)));
+              if (oppn_piece == 6)
+              {
+                this->game_state = WIN;
+                this->legal_actions = all_actions;
+                return;
+              }
+            }
+            if (j > 0 && (oppn_piece = oppn_board[i - 1][j - 1]) > 0)
+            {
+              all_actions.push_back(Move(Point(i, j), Point(i - 1, j - 1)));
               if (oppn_piece == 6)
               {
                 this->game_state = WIN;
@@ -181,12 +203,10 @@ void State::get_legal_actions()
             }
           }
           break;
-        }
 
         case 2: // rook
         case 4: // bishop
         case 5: // queen
-        {
           int st, end;
           switch (now_piece)
           {
@@ -206,17 +226,15 @@ void State::get_legal_actions()
             st = 0;
             end = -1;
           }
-
-          for (int part = st; part < end; part++)
+          for (int part = st; part < end; part += 1)
           {
             auto move_list = move_table_rook_bishop[part];
-            for (int k = 0; k < max_moves; k++)
+            for (int k = 0; k < std::max(BOARD_H, BOARD_W); k += 1)
             {
               int p[2] = {move_list[k][0] + i, move_list[k][1] + j};
 
               if (p[0] >= BOARD_H || p[0] < 0 || p[1] >= BOARD_W || p[1] < 0)
                 break;
-
               now_piece = self_board[p[0]][p[1]];
               if (now_piece)
                 break;
@@ -234,14 +252,12 @@ void State::get_legal_actions()
                 }
                 else
                   break;
-              }
+              };
             }
           }
           break;
-        }
 
         case 3: // knight
-        {
           for (auto move : move_table_knight)
           {
             int x = move[0] + i;
@@ -249,11 +265,9 @@ void State::get_legal_actions()
 
             if (x >= BOARD_H || x < 0 || y >= BOARD_W || y < 0)
               continue;
-
             now_piece = self_board[x][y];
             if (now_piece)
               continue;
-
             all_actions.push_back(Move(Point(i, j), Point(x, y)));
 
             oppn_piece = oppn_board[x][y];
@@ -265,17 +279,14 @@ void State::get_legal_actions()
             }
           }
           break;
-        }
 
         case 6: // king
-        {
           for (auto move : move_table_king)
           {
             int p[2] = {move[0] + i, move[1] + j};
 
             if (p[0] >= BOARD_H || p[0] < 0 || p[1] >= BOARD_W || p[1] < 0)
               continue;
-
             now_piece = self_board[p[0]][p[1]];
             if (now_piece)
               continue;
@@ -292,11 +303,10 @@ void State::get_legal_actions()
           }
           break;
         }
-        }
       }
     }
   }
-
+  std::cout << "\n";
   this->legal_actions = all_actions;
 }
 

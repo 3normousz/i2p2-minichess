@@ -9,7 +9,7 @@ using namespace std;
 
 int alphabeta(State *state, int depth, int alpha, int beta, bool maximizingPlayer)
 {
-    if (depth == 0 || state->game_state != 0)
+    if (depth == 0 || (state->game_state != GameState::UNKNOWN || state->game_state != GameState::NONE))
     {
         int evaluation = state->evaluate();
         delete state;
@@ -48,10 +48,10 @@ int alphabeta(State *state, int depth, int alpha, int beta, bool maximizingPlaye
 
 Move Alphabeta::get_move(State *state, int depth)
 {
+
     Move best_move = state->legal_actions[0];
     int best_score = INT_MIN;
-
-    for (size_t i = 1; i < state->legal_actions.size(); ++i)
+    for (size_t i = 1; i < state->legal_actions.size(); i++)
     {
         Move move = state->legal_actions[i];
         State *next_state = state->next_state(move);
